@@ -80,7 +80,7 @@ class MoDS():
 		norm_mix_weights = self.un_norm_mix_weights / tf.reduce_sum(self.un_norm_mix_weights)
 		log_norm_mix_weights = tf.log(norm_mix_weights)
 
-		return tf.reduce_sum(
+		return tf.reduce_mean(
 			tf.reduce_logsumexp(
 				tf.add(comp_log_probs, log_norm_mix_weights),
 				axis=1
@@ -99,4 +99,4 @@ class MoDS():
 		for i in xrange(self.N):
 			print('C%d:' % i)
 			for j in xrange(self.n_steps):
-				print('Step {}: {}'.format(j, np.exp(self.components[i].dirs[j].alphas.eval(session=sess))))
+				print('\tStep {}: {}'.format(j, np.exp(self.components[i].dirs[j].alphas.eval(session=sess))))

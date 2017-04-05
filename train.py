@@ -14,15 +14,15 @@ N = 4
 # Learning rate
 lr = 1e-4
 # Max iterations
-max_iters = 1
+max_iters = 1000
 # Print every
 print_iter = 10
 # Validate every
 val_iter = 100
 
 # Load the data ---------------------------------------------------------------
-train_batch = np.ones((50, n_steps, n_cats)) / (n_steps*n_cats)
-val_batch = np.ones((50, n_steps, n_cats)) / (n_steps*n_cats)
+train_batch = np.ones((5000, n_steps, n_cats)) / (n_steps*n_cats)
+val_batch = np.ones((5000, n_steps, n_cats)) / (n_steps*n_cats)
 
 # Start the session -----------------------------------------------------------
 with tf.Session() as sess:

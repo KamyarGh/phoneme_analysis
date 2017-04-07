@@ -69,7 +69,7 @@ class MoDS():
 
 	def log_prob(self, batch):
 		# Compute the log probabilities from each component distribution
-		comp_log_probs = tf.concat(
+		self.comp_log_probs = tf.concat(
 			map(
 				lambda comp: comp.log_prob(batch),
 				self.components
@@ -82,10 +82,38 @@ class MoDS():
 
 		return tf.reduce_mean(
 			tf.reduce_logsumexp(
-				tf.add(comp_log_probs, log_norm_mix_weights),
+				tf.add(self.comp_log_probs, log_norm_mix_weights),
 				axis=1
 			)
 		)
+
+	def get_mean_and_std(self, sess):
+		means = []
+		stds = []
+		for ds in self.components:
+			ds_means = []
+			ds_stds = []
+			for d in ds.dirs:
+				alphas = d.alphas.eval(session=sess)
+				alphas = np.exp(alphas)
+				a_sum = np.sum(alphas)
+
+				ds_means.append(alphas / a_sum)
+				ds_stds.append(
+					np.sqrt(
+						(alphas * (a_sum - alphas)) / (a_sum*a_sum*(a_sum+1))
+					)
+				)
+			means.append(ds_means)
+			stds.append(ds_stds)
+		
+		means = np.array(means)
+		stds = np.array(stds)
+
+		return means, stds
+
+	def posterior_class_probs(self, batch):
+		return self.comp_log_probs
 
 	def __str__(self, sess):
 		print('\nMoDS Parameters ({} Comp, {} Steps):'.format(self.N, self.n_steps))

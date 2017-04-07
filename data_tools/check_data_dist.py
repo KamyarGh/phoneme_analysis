@@ -39,3 +39,16 @@ print('\nNum Good Ids: %d' % num_good_ids)
 print('\nData points per id:')
 print(data_points)
 print('\nTotal Data Points: %d' % sum(data_points))
+
+
+# --------------------------------------------------
+all_phonemes = set()
+for child in phone_data:
+	for age in phone_data[child]:
+		for phone in phone_data[child][age]:
+			all_phonemes.add(phone)
+
+print(len(all_phonemes))
+print(all_phonemes)
+for phone in all_phonemes:
+	print(phone)

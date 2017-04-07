@@ -7,22 +7,34 @@ from models.MoDS import MoDS
 # Number of time steps being looked at
 n_steps = 3
 # Number of phoneme categories being used
-n_cats = 10
+n_cats = 4
 # Number of mixture components to use
 N = 4
 
 # Learning rate
 lr = 1e-4
 # Max iterations
-max_iters = 1000
+max_iters = 20000
 # Print every
 print_iter = 10
 # Validate every
 val_iter = 100
 
 # Load the data ---------------------------------------------------------------
-train_batch = np.ones((5000, n_steps, n_cats)) / (n_steps*n_cats)
-val_batch = np.ones((5000, n_steps, n_cats)) / (n_steps*n_cats)
+# data file
+data = np.load('./data/place.npy')
+data += 1e-6
+data_sum = np.sum(data, axis=2, keepdims=True)
+data /= data_sum
+
+train_batch = data
+
+# train_batch = np.ones((5000, n_steps, n_cats)) / (n_steps*n_cats)
+val_batch = np.ones((500, n_steps, n_cats)) / (n_steps*n_cats)
+
+# TODO: reweighting the data
+# TODO: early stopping
+
 
 # Start the session -----------------------------------------------------------
 with tf.Session() as sess:

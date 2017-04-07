@@ -116,6 +116,8 @@ class MoDS():
 		return self.comp_log_probs
 
 	def __str__(self, sess):
+		means, stds = self.get_mean_and_std(sess)
+
 		print('\nMoDS Parameters ({} Comp, {} Steps):'.format(self.N, self.n_steps))
 		print(len(self.components))
 		print(len(self.components[0].dirs))
@@ -127,4 +129,7 @@ class MoDS():
 		for i in xrange(self.N):
 			print('C%d:' % i)
 			for j in xrange(self.n_steps):
-				print('\tStep {}: {}'.format(j, np.exp(self.components[i].dirs[j].alphas.eval(session=sess))))
+				print('\tStep {}:\t{}'.format(j, np.exp(self.components[i].dirs[j].alphas.eval(session=sess))))
+				print('\tMean:\t{}'.format(means[i,j]))
+				print('\tSTD:\t{}'.format(stds[i, j]))
+				print('\n')

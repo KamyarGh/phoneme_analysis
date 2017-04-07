@@ -74,4 +74,4 @@ def load_data(data, save_path=None):
 
 if __name__ == '__main__':
 	data = format_data(['stops', 'affricates', 'fricatives', 'nasals'], './test_formatting')
-	load_data(data, './data/manner')
+	load_data(data, './data/place')

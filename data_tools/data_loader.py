@@ -3,16 +3,25 @@ import pickle
 
 intervals = []
 
-def build_sub_iterator(first_iter, second_iter):
-	def sub_iterator():
-		for i1 in first_iter:
-			for i2 in second_iter:
-				if isinstance(i2, list):
-					yield [i1] + i2
-				else:
-					yield [i1, i2]
+def build_sub_iterator(first_iter_factory, second_iter_factory=None):
+	if second_iter_factory is None:
+		def sub_iterator():
+			# The first iterator's elements will be turned into lists
+			# 	we can append to in later iterator building
+			for x in first_iter_factory():
+				yield [x]
+	else:
+		def sub_iterator():
+			for x in first_iter_factory():
+				for y in second_iter_factory():
+					yield x+[y]
+
+	return sub_iterator
 
 
+# Yes, yes, I know I can do binary search and whatnot
+# 	but it has no practical advantage here cause I will
+# 	only ever have a few intervals
 def interval_idx(age):
 	for i, interval in enumerate(intervals):
 		if interval[0] <= age <= interval[1]:
@@ -36,11 +45,12 @@ def load_data(data_fname):
 			idx = interval_idx(age)
 			int_sets[idx].add(age)
 
-		cur_iterator = iter(int_sets[-1])
-		for i in xrange(num_intervals-2, -1, -1):
-			cur_iterator = build_sub_iterator(iter(int_sets[i]), cur_iterator)
 
-		for element in cur_iterator:
+		int_sets_iters = map(lambda p: lambda: iter(p), l)
+		int_sets_iters[0] = build_sub_iterator(int_sets_iters[0])
+		iter_factory = reduce(lambda i1, i2: build_sub_iterator(i1, i2), int_sets_iters)
+
+		for element in iter_factory():
 			batch_ids.append(child)
 			batch_vectors.append(np.array(element))
 

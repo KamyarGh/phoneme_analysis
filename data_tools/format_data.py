@@ -1,4 +1,3 @@
-import numpy as np
 import os
 import pickle
 from collections import defaultdict
@@ -15,6 +14,7 @@ def get_fname_to_age_map():
 	for child_dir in os.listdir(CORPUS_PATH):
 		child_dir = os.path.join(CORPUS_PATH, child_dir)
 
+		age_set = set([])
 		for data_file in os.listdir(child_dir):
 			if '.cha' in data_file:
 				# Read the age of the child
@@ -29,6 +29,11 @@ def get_fname_to_age_map():
 								age = float(age[0])*12
 							break
 				age = int(age*100 + 0.5)/100.0
+				# duplicate age fixing
+				if age in age_set:
+					age += 0.01
+				age_set.add(age)
+
 				fname_to_age[data_file.split('.')[0]] = age
 
 	return fname_to_age
@@ -41,7 +46,7 @@ def check_fname(fname):
 	return [False]
 
 
-def format_data(categories, save_path):
+def format_data(categories, save_path=None):
 	fname_to_age = get_fname_to_age_map()
 	formatted_data = defaultdict(lambda: defaultdict(lambda: []))
 
@@ -80,13 +85,13 @@ def format_data(categories, save_path):
 	for child in formatted_data:
 		for age in formatted_data[child]:
 			temp = formatted_data[child][age]
-			temp = np.array(temp).astype(float)
-			temp_sum = np.sum(temp)
+			temp_sum = float(sum(temp))
 			if temp_sum != 0:
-				formatted_data[child][age] = temp/temp_sum
+				formatted_data[child][age] = map(lambda p: p/temp_sum, temp)
 				# print(formatted_data[child][age])
 
-	# pickle.dump(formatted_data, save_path)
+	# if save_path is not None:
+	# 	pickle.dump(formatted_data, open(save_path, 'w'))
 	return formatted_data
 
 
@@ -103,5 +108,5 @@ def print_formatted_data(formatted_data):
 
 if __name__ == '__main__':
 	# print(get_fname_to_age_map())
-	data = format_data(['consonants', 'vowels'], './test_formatting')
+	data = format_data(['stops', 'affricates', 'fricatives', 'nasals'], './test_formatting')
 	print_formatted_data(data)

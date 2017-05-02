@@ -4,13 +4,14 @@ import numpy as np
 class Dirichlet():
 	def __init__(self, K):
 		self.K = K
-		self.alphas = tf.Variable(
+		self.log_alphas = tf.Variable(
 			tf.truncated_normal(
 				[K],
-				mean = 1,
-				stddev = 0.1
+				mean = 0,
+				stddev = 0.2
 			)
 		)
+		self.alphas = tf.exp(self.log_alphas)
 
 	def log_prob(self, x):
 		l_p = tf.reduce_sum(
@@ -38,9 +39,12 @@ class DirichletSequence():
 		assert(len(x_list) == self.n_steps, 'Need one datapoint per step!')
 
 		return tf.reduce_sum(
-			map(
-				lambda (x, d): d.log_prob(x),
-				zip(x_list, self.dirs)
+			tf.concat(
+				map(
+					lambda (x, d): d.log_prob(x),
+					zip(x_list, self.dirs)
+				),
+				axis=1
 			),
 			axis=1,
 			keep_dims=True
@@ -67,7 +71,7 @@ class MoDS():
 		# Build the mixture components
 		self.components = [DirichletSequence(K, n_steps) for i in xrange(N)]
 
-	def log_prob(self, batch):
+	def log_prob(self, batch, weights=None):
 		# Compute the log probabilities from each component distribution
 		self.comp_log_probs = tf.concat(
 			map(
@@ -80,11 +84,17 @@ class MoDS():
 		norm_mix_weights = self.un_norm_mix_weights / tf.reduce_sum(self.un_norm_mix_weights)
 		log_norm_mix_weights = tf.log(norm_mix_weights)
 
-		return tf.reduce_mean(
-			tf.reduce_logsumexp(
-				tf.add(self.comp_log_probs, log_norm_mix_weights),
-				axis=1
+		computed_log_probs = tf.reduce_logsumexp(
+			tf.add(self.comp_log_probs, log_norm_mix_weights),
+			axis=1
+		)
+		if weights is not None:
+			weighted_log_probs = tf.multiply(weights, computed_log_probs)
+			return tf.reduce_mean(
+				weighted_log_probs
 			)
+		return tf.reduce_mean(
+			computed_log_probs
 		)
 
 	def get_mean_and_std(self, sess):
@@ -95,7 +105,6 @@ class MoDS():
 			ds_stds = []
 			for d in ds.dirs:
 				alphas = d.alphas.eval(session=sess)
-				alphas = np.exp(alphas)
 				a_sum = np.sum(alphas)
 
 				ds_means.append(alphas / a_sum)

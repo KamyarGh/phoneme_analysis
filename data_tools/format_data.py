@@ -1,7 +1,10 @@
+import numpy as np
 import os
 import pickle
 from collections import defaultdict
 from catalog import get_catalog
+from scipy.ndimage.filters import gaussian_filter1d
+
 
 CORPUS_PATH = './davis_corpus'
 CATEGORY_PATH = './category_path'
@@ -44,6 +47,35 @@ def check_fname(fname):
 	if 'query' not in fname[0] and fname[-1]=='xml':
 		return [True, fname[0], fname[1]]
 	return [False]
+
+# Due to time limitations there was not ime for refactoring
+# So we have this inefficient work to do
+def smooth_data(data):
+	for child in data:
+		ages = []
+		values = []
+
+		for age in data[child]:
+			ages.append(age)
+			values.append(data[child][age])
+
+		ages = np.array(ages)
+		values = np.array(values)
+		sort_inds = np.argsort(ages)
+		ages = ages[sort_inds]
+		values = values[sort_inds]
+
+		values = gaussian_filter1d(values, 2, axis=0)
+
+		# Rebuild the data dictionary
+		new_dict = {}
+		for i in xrange(ages.shape[0]):
+			new_dict[ages[i]] = values[i]
+
+		data[child] = new_dict
+
+	return data
+
 
 
 def format_data(categories, save_path=None):
@@ -92,6 +124,9 @@ def format_data(categories, save_path=None):
 
 	# if save_path is not None:
 	# 	pickle.dump(formatted_data, open(save_path, 'w'))
+
+	formatted_data = smooth_data(formatted_data)
+
 	return formatted_data
 
 
@@ -108,5 +143,35 @@ def print_formatted_data(formatted_data):
 
 if __name__ == '__main__':
 	# print(get_fname_to_age_map())
-	data = format_data(['stops', 'affricates', 'fricatives', 'nasals'], './test_formatting')
+	data = format_data(['vowels', 'c_voiced', 'c_voiceless'], './test_formatting')
 	print_formatted_data(data)
+
+	import matplotlib.pyplot as plt
+
+	ages = []
+	values = []
+
+	# Nate, Paxton, Martin, Rowan, Hannah
+	c = 'Paxton'
+	for age in data[c]:
+		ages.append(age)
+		values.append(data[c][age])
+	ages = np.array(ages)
+	values = np.array(values)
+	sort_inds = np.argsort(ages)
+	ages = ages[sort_inds]
+	values = values[sort_inds]
+
+	# values = gaussian_filter1d(values, 2, axis=0)
+
+	fig, ax = plt.subplots(1,1)
+	ax.plot(ages, values[:, 0], label='vowels')
+	ax.plot(ages, values[:, 1], label='cons. voiced')
+	ax.plot(ages, values[:, 2], label='cons. voiceless')
+	ax.set_xlabel('Months')
+	ax.set_ylabel('Proportion')
+	ax.set_title('Paxton\'s Records for Consonant-Vowel Distributions After Smoothing')
+	ax.legend()
+	ax.set_ylim([0, 0.8])
+	plt.savefig('after.png')
+	# plt.show()

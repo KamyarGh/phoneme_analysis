@@ -19,7 +19,7 @@ def plot_model(N, n_cats, n_steps, means, stds, cat_names, plot_name, save=False
 			step = n_steps - j - 1
 			# , capsize=7, error_kw={'linewidth':3}
 			ax[j].bar(inds, means[i,step], width, color=colors[step], yerr=stds[i,step], ecolor='green', error_kw={'capsize':4, 'linewidth':3})
-			ax[j].set_ylabel('Step {}'.format(step+1))
+			ax[j].set_ylabel('Stage {}'.format(step+1))
 			ax[j].set_xticks(inds + width / 2)
 			ax[j].set_xticklabels(cat_names)
 			# ax[j].set_yticks(np.arange(0,y_max,0.1))
